@@ -17,25 +17,10 @@ This project is an ETL (Extract, Transform, Load) service designed to process ch
    cd child-care-data-etl
    ```
 
-2. Create a virtual environment (optional but recommended):
-   ```
-   python -m venv venv
-   source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
-   ```
-
-3. Install the required packages:
+2. Install the required packages:
    ```
    pip install -r requirements.txt
    ```
-
-### requirements.txt
-
-Here's the content of the `requirements.txt` file:
-
-```
-openpyxl==3.0.10
-requests==2.26.0
-```
 
 ## Running the Service
 
@@ -52,23 +37,25 @@ requests==2.26.0
 
 While developing this ETL service, several tradeoffs were made to balance functionality, time constraints, and simplicity:
 
-1. **SQLite Database**: We used SQLite for simplicity, but for a production environment, a more robust database system like PostgreSQL would be more appropriate.
+1. **SQLite Database**: I used SQLite for simplicity, but for a production environment, a more robust database system like PostgreSQL would be more appropriate.
 
 2. **Error Handling**: The current implementation has basic error handling. In a production system, more comprehensive error handling and logging would be crucial.
 
-3. **Data Validation**: We implemented basic data cleaning and validation. More rigorous validation checks could be added to ensure data integrity.
+3. **Data Validation**: I implemented basic data cleaning and validation, like deduplication and standardizing formats of phone numbers and addresses. More rigorous validation checks could be added to ensure data integrity.
 
-4. **Geocoding**: The current geocoding implementation is basic and may not handle all address formats. A more sophisticated geocoding service could improve accuracy.
+4. **Data Quality**: I perform basic data quality checks, but in the future I would have added in QA using Great Expectations to verify things like columns that are expected to be null, columns that are expected to be unique, verifying that certain columns values fall within an expected range, etc.
 
-5. **Performance**: For large datasets, the current row-by-row processing might be slow. Batch processing or using more efficient data processing libraries like pandas could improve performance.
+6. **Geocoding**: The current geocoding implementation is basic and may not handle all address formats. I use an external API that is free (TomTom Geocoding API) but the free level does have limits. A more sophisticated geocoding service could improve accuracyand not incur additional cost. *IMPORTANT NOTE*: I include the API key in this repository's .env file, to avoid the user having to go make an API account for testing this repo. THIS IS BAD PRACTICE, and should never be done. I created the key with a dummy email address and no identifying information. The key will be automatically destroyed 1 week from it's creation date.
 
-6. **Testing**: The current version lacks unit tests. Implementing a comprehensive test suite would be a priority for a production-ready system.
+7. **Performance**: For large datasets, the current row-by-row processing might be slow. Batch processing or using more efficient data processing libraries like pandas could improve performance.
+
+8. **Testing**: The current version lacks unit tests. Implementing a comprehensive test suite would be a priority for a production-ready system.
 
 Given additional time, these areas would be prime candidates for improvement.
 
 ## Long-term ETL Strategies
 
-For a more scalable and robust ETL process in the long term, consider the following strategies:
+For a more scalable and robust ETL process in the long term, I would consider the following strategies:
 
 1. **Schema Flexibility**: Implement a schema-on-read approach to handle varying file formats and changing schemas.
 
@@ -76,25 +63,12 @@ For a more scalable and robust ETL process in the long term, consider the follow
 
 3. **Workflow Orchestration**: Use tools like Apache Airflow for scheduling and monitoring ETL jobs.
 
-4. **Data Quality Framework**: Implement automated data quality checks using tools like Great Expectations.
+4. **Data Quality Framework**: Implement automated data quality checks using tools like Great Expectations. 
 
-5. **Metadata Management**: Develop a comprehensive metadata management system for better data governance.
-
-6. **Real-time Processing**: Consider implementing stream processing for real-time data ingestion and transformation.
-
-7. **Machine Learning Integration**: Explore opportunities to use ML for data enrichment and anomaly detection.
-
-For a more detailed strategy, refer to the [Long-Term ETL Strategy Document](link-to-strategy-document).
 
 ## Additional Notes
 
-- This project is a prototype and may require additional security measures before deployment in a production environment.
-- Regular code reviews and updates to dependencies are recommended to maintain the health and security of the system.
-- Consider implementing a CI/CD pipeline for automated testing and deployment.
-
-## Contributing
-
-Contributions to this project are welcome. Please fork the repository and submit a pull request with your proposed changes.
+-Thank you for your time and consideration!
 
 ## License
 
