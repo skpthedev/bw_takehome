@@ -50,7 +50,7 @@ While developing this ETL service, several tradeoffs were made to balance functi
 
 2. **Error Handling**: The current implementation has basic error handling. In a production system, more comprehensive error handling and logging would be crucial.
 
-3. **Data Validation**: I implemented basic data cleaning and validation, like deduplication and standardizing formats of phone numbers and addresses. More rigorous validation checks could be added to ensure data integrity.
+3. **Data Validation**: I implemented basic data cleaning and validation, like deduplication and standardizing formats of phone numbers and addresses. More rigorous validation checks could be added to ensure data integrity. *Deviation from instructions*: I chose to remove the first_name and last_name fields in favor of contact_name. I made this choice because in my experience, there is no universal way to parse a first and last name reliably. There is a great article on this problem [here](https://www.kalzumeus.com/2010/06/17/falsehoods-programmers-believe-about-names/) if you want to check it out. Names come in so many formats, it's best to preserve the original format as a whole entity.
 
 4. **Data Quality**: I perform basic data quality checks, but in the future I would have added in QA using Great Expectations to verify things like columns that are expected to be null, columns that are expected to be unique, verifying that certain columns values fall within an expected range, etc.
 
