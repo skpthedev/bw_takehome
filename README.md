@@ -33,6 +33,8 @@ This project is an ETL (Extract, Transform, Load) service designed to process ch
 
 3. The script will process the data and create a SQLite database named `child_care_data.db` in the project directory.
 
+4. I use DBeaver to browse the resulting SQLite database, but you can use any database browsing tool you choose.
+
 ## Tradeoffs and Future Improvements
 
 While developing this ETL service, several tradeoffs were made to balance functionality, time constraints, and simplicity:
