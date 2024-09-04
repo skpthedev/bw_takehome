@@ -35,6 +35,13 @@ This project is an ETL (Extract, Transform, Load) service designed to process ch
 
 4. I use DBeaver to browse the resulting SQLite database, but you can use any database browsing tool you choose.
 
+## Testing the Service
+
+2. Run the testing script:
+   ```
+   python -m unittest test_etl.py
+   ```
+
 ## Tradeoffs and Future Improvements
 
 While developing this ETL service, several tradeoffs were made to balance functionality, time constraints, and simplicity:
