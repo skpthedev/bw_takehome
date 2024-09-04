@@ -6,6 +6,8 @@ import requests
 from openpyxl import load_workbook
 import os
 from dotenv import load_dotenv
+import numpy as np
+import pandas as pd 
 
 # Load the .env file
 load_dotenv('.env')
@@ -71,10 +73,7 @@ def parse_date(date_str):
     except TypeError:
         return None    
 
-def get_ages_served(age_data):
-    if all(value is None for value in age_data.values()):
-        return None, None, None
-
+def get_ages_served(row):
     age_ranges = {
         'Infants': (0, 11),
         'Toddlers': (12, 23),
@@ -85,15 +84,26 @@ def get_ages_served(age_data):
     ages = []
     min_age = None
     max_age = None
+
+    # Convert numpy array to pandas Series if necessary
+    if isinstance(row, np.ndarray):
+        row = pd.Series(row, index=['Infant', 'Toddler', 'Preschool', 'School'])
+    elif isinstance(row, dict):
+        row = pd.Series(row)
+
+    # Check if all values are None or NaN
+    if row.isnull().all():
+        return '', None, None
     
     for age_group, (low, high) in age_ranges.items():
-        if any(age_group.lower() in str(value).lower() for value in age_data.values() if value is not None):
+        column_name = age_group[:-1] if age_group.endswith('s') else age_group  # Remove 's' for column matching
+        if column_name in row.index and pd.notna(row[column_name]) and str(row[column_name]).upper() == 'Y':
             ages.append(age_group)
             if min_age is None or low < min_age:
                 min_age = low
             if max_age is None or (high is not None and high > max_age):
                 max_age = high
-        elif age_data.get(age_group) == 'Y':  # For source3 format
+        elif any(age_group.lower() in str(value).lower() for value in row if pd.notna(value)):
             ages.append(age_group)
             if min_age is None or low < min_age:
                 min_age = low
