@@ -1,19 +1,33 @@
-import sqlite3
-from datetime import datetime
-import hashlib
-import re
-import requests
-from openpyxl import load_workbook
-import os
-from dotenv import load_dotenv
-import numpy as np
-import pandas as pd 
+"""
+ETL (Extract, Transform, Load) module for processing child care provider data.
 
-# Load the .env file
+This module contains functions to clean, transform, and load data from Excel files
+into a SQLite database for child care providers.
+"""
+
+import os
+import re
+import sqlite3
+import hashlib
+from datetime import datetime
+from typing import Tuple, Optional, Dict, Any
+
+import numpy as np
+import pandas as pd
+import requests
+from dotenv import load_dotenv
+from openpyxl import load_workbook
+
+# Load environment variables
 load_dotenv('.env')
 
+# Constants
+DATABASE_NAME = 'child_care_data.db'
+EXCEL_FILE_NAME = 'Technical Exercise Data.xlsx'
+API_KEY = os.getenv('api_key')
+
 # Database setup
-conn = sqlite3.connect('child_care_data.db')
+conn = sqlite3.connect(DATABASE_NAME)
 cursor = conn.cursor()
 
 # Create the table (updated schema)
@@ -55,25 +69,31 @@ CREATE TABLE IF NOT EXISTS child_care_providers (
 )
 ''')
 
-def all_none(data):
+
+def all_none(data: Dict[str, Any]) -> bool:
+    """Check if all values in a dictionary are None."""
     return all(value is None for value in data.values())
 
-def clean_phone(phone):
+
+def clean_phone(phone: str) -> str:
+    """Remove non-digit characters from a phone number string."""
     return re.sub(r'\D', '', str(phone))
 
-def parse_date(date_str):
+
+def parse_date(date_str: Optional[str]) -> Optional[datetime.date]:
+    """Parse a date string into a datetime.date object."""
     if not date_str:
         return None
     if isinstance(date_str, datetime):
         return date_str.date()
     try:
         return datetime.strptime(str(date_str), '%m/%d/%y').date()
-    except ValueError:
+    except (ValueError, TypeError):
         return None
-    except TypeError:
-        return None    
 
-def get_ages_served(row):
+
+def get_ages_served(row: pd.Series) -> Tuple[str, Optional[int], Optional[int]]:
+    """Extract ages served information from a data row."""
     age_ranges = {
         'Infants': (0, 11),
         'Toddlers': (12, 23),
@@ -112,16 +132,19 @@ def get_ages_served(row):
     
     return ', '.join(ages), min_age, max_age if max_age is not None else None
 
-def extract_title(name):
+
+def extract_title(name: Optional[str]) -> Optional[str]:
+    """Extract a title from a name string."""
     title_pattern = r'\b(Director|Owner|Primary Caregiver|Other)\b'
     match = re.search(title_pattern, str(name))
     if match:
         return match.group(1)
     return None
 
-def geocode_address(address):
-    api_key = os.getenv('api_key')
-    url = f"https://api.tomtom.com/search/2/geocode/{address}.json?key={api_key}"
+
+def geocode_address(address: str) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+    """Geocode an address using the TomTom API."""
+    url = f"https://api.tomtom.com/search/2/geocode/{address}.json?key={API_KEY}"
     response = requests.get(url)
     if response.status_code == 200:
         data = response.json()
@@ -134,7 +157,9 @@ def geocode_address(address):
             )
     return None, None, None
 
-def process_excel_file(file_path):
+
+def process_excel_file(file_path: str) -> None:
+    """Process the Excel file and load data into the database."""
     wb = load_workbook(filename=file_path, read_only=True)
     
     for sheet_name in ['source1', 'source2', 'source3']:
@@ -144,30 +169,37 @@ def process_excel_file(file_path):
         for row in sheet.iter_rows(min_row=2, values_only=True):
             row_data = dict(zip(headers, row))
             if all_none(row_data):
-                pass
-            else:
-                    
-                # Common data extraction
-                age_data = {
-                    'Ages Accepted 1': row_data.get('Ages Accepted 1'),
-                    'AA2': row_data.get('AA2'),
-                    'AA3': row_data.get('AA3'),
-                    'AA4': row_data.get('AA4'),
-                    'Infant': row_data.get('Infant'),
-                    'Toddler': row_data.get('Toddler'),
-                    'Preschool': row_data.get('Preschool'),
-                    'School': row_data.get('School')
-                }
-                
-                ages_served, min_age, max_age = get_ages_served(age_data)
-                
-                contact_name = row_data.get('Primary Contact Name') or row_data.get('Primary Caregiver') or ''
-                title = extract_title(contact_name) or row_data.get('Primary Contact Role') or ''
-                
-                full_address = row_data.get('Address') or row_data.get('Address 1') or f'{row_data.get("Address")}, {row_data.get("City")} {row_data.get("State")} {row_data.get("Zip")}' or None
-                
-                if full_address:            
-                    state, city, zip_code = geocode_address(full_address)
+                continue
+            
+            # Common data extraction
+            age_data = {
+                'Ages Accepted 1': row_data.get('Ages Accepted 1'),
+                'AA2': row_data.get('AA2'),
+                'AA3': row_data.get('AA3'),
+                'AA4': row_data.get('AA4'),
+                'Infant': row_data.get('Infant'),
+                'Toddler': row_data.get('Toddler'),
+                'Preschool': row_data.get('Preschool'),
+                'School': row_data.get('School')
+            }
+            
+            ages_served, min_age, max_age = get_ages_served(age_data)
+            
+            contact_name = row_data.get('Primary Contact Name') or row_data.get('Primary Caregiver') or ''
+            title = extract_title(contact_name) or row_data.get('Primary Contact Role') or ''
+            
+            full_address = (
+                row_data.get('Address') or
+                row_data.get('Address 1') or
+                f"{row_data.get('Address')}, {row_data.get('City')} {row_data.get('State')} {row_data.get('Zip')}" or
+                None
+            )
+            
+            state, city, zip_code = None, None, None
+            if full_address:
+                state, city, zip_code = geocode_address(full_address)
+            
+            data = {
                 
                 data = {
                     'accepts_financial_aid': str(row_data.get('Accepts Subsidy', '')).lower() == 'accepts subsidy',
