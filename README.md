@@ -51,7 +51,7 @@ While developing this ETL service, several tradeoffs were made to balance functi
 
 7. **Performance**: For large datasets, the current row-by-row processing might be slow. Batch processing or using more efficient data processing libraries like pandas could improve performance.
 
-8. **Testing**: The current version lacks unit tests. Implementing a comprehensive test suite would be a priority for a production-ready system.
+8. **Testing**: The current version lacks a large number of unit tests. Implementing a comprehensive test suite would be a priority for a production-ready system.
 
 Given additional time, these areas would be prime candidates for improvement.
 
