@@ -199,8 +199,6 @@ def process_excel_file(file_path: str) -> None:
             if full_address:
                 state, city, zip_code = geocode_address(full_address)
             
-            data = {
-                
                 data = {
                     'accepts_financial_aid': str(row_data.get('Accepts Subsidy', '')).lower() == 'accepts subsidy',
                     'ages_served': ages_served or None,
@@ -262,3 +260,5 @@ if __name__ == "__main__":
     process_excel_file('Technical Exercise Data.xlsx')
     conn.close()
     print("ETL process completed successfully.")
+    
+    
